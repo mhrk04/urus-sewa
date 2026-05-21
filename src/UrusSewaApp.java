@@ -15,6 +15,8 @@ import java.util.Locale;
 import java.util.Map;
 
 public class UrusSewaApp {
+    private static final Locale LOCALE_MY = new Locale("ms", "MY");
+    private static final String RM_PREFIX = "RM ";
     private final FleetInventory inventory = new FleetInventory();
     private final DefaultTableModel tableModel = new DefaultTableModel(
             new Object[]{"Type", "Brand", "Model", "Plate", "Daily Rate", "Available"}, 0
@@ -240,7 +242,7 @@ public class UrusSewaApp {
         brandField.setText(tableModel.getValueAt(selected, 1).toString());
         modelField.setText(tableModel.getValueAt(selected, 2).toString());
         plateField.setText(tableModel.getValueAt(selected, 3).toString());
-        dailyRateField.setText(tableModel.getValueAt(selected, 4).toString().replace("RM ", ""));
+        dailyRateField.setText(tableModel.getValueAt(selected, 4).toString().replace(RM_PREFIX, ""));
         availableBox.setSelected("Yes".equals(tableModel.getValueAt(selected, 5).toString()));
     }
 
@@ -284,7 +286,7 @@ public class UrusSewaApp {
                     car.getBrand(),
                     car.getModel(),
                     car.getPlate(),
-                    String.format(Locale.ROOT, "RM %.2f", car.getDailyRate()),
+                    String.format(Locale.ROOT, RM_PREFIX + "%.2f", car.getDailyRate()),
                     car.isAvailable() ? "Yes" : "No"
             });
         }
@@ -430,7 +432,7 @@ public class UrusSewaApp {
                 return "No inventory records.";
             }
 
-            NumberFormat currency = NumberFormat.getCurrencyInstance(new Locale("ms", "MY"));
+            NumberFormat currency = NumberFormat.getCurrencyInstance(LOCALE_MY);
             StringBuilder sb = new StringBuilder();
             sb.append(String.format("%-10s %-12s %-12s %-10s %-11s %-12s%n",
                     "Type", "Brand", "Model", "Plate", "Available", "3-Day Rent"));
@@ -492,6 +494,9 @@ public class UrusSewaApp {
                 byteBuffer.get(bytes);
                 byte[] hash = digest.digest(bytes);
                 Arrays.fill(bytes, (byte) 0);
+                if (byteBuffer.hasArray()) {
+                    Arrays.fill(byteBuffer.array(), (byte) 0);
+                }
                 StringBuilder hex = new StringBuilder();
                 for (byte b : hash) {
                     hex.append(String.format("%02x", b));
