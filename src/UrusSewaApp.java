@@ -4,8 +4,11 @@ import java.awt.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.nio.charset.StandardCharsets;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -62,10 +65,27 @@ public class UrusSewaApp {
             return false;
         }
 
-        boolean authenticated = StaffLoginService.authenticate(
-                userField.getText().trim(),
-                new String(passField.getPassword())
-        );
+        if (!StaffLoginService.isConfigured()) {
+            JOptionPane.showMessageDialog(
+                    null,
+                    "Staff login is not configured. Set URUSSEWA_STAFF_HASH in the environment.",
+                    "Login Not Configured",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return false;
+        }
+
+        char[] password = passField.getPassword();
+        boolean authenticated;
+        try {
+            authenticated = StaffLoginService.authenticate(
+                    userField.getText().trim(),
+                    password
+            );
+        } finally {
+            Arrays.fill(password, '\0');
+            passField.setText("");
+        }
 
         if (!authenticated) {
             JOptionPane.showMessageDialog(null, "Unauthorized access.", "Login Failed", JOptionPane.ERROR_MESSAGE);
@@ -443,26 +463,35 @@ public class UrusSewaApp {
 
     static class StaffLoginService {
         private static final Map<String, String> USERS = new HashMap<>();
-        private static final String DEFAULT_STAFF_HASH =
-                "0d69d0d2dc8ae1b189139ced4b8466aa469c9070b78f16b74b17142f06995f2f";
 
         static {
-            String configuredHash = System.getenv("URUSSEWA_STAFF_HASH");
-            if (configuredHash == null || configuredHash.isBlank()) {
-                configuredHash = DEFAULT_STAFF_HASH;
+            String username = System.getenv("URUSSEWA_STAFF_USER");
+            if (username == null || username.isBlank()) {
+                username = "staff";
             }
-            USERS.put("staff", configuredHash.toLowerCase(Locale.ROOT));
+            String configuredHash = System.getenv("URUSSEWA_STAFF_HASH");
+            if (configuredHash != null && !configuredHash.isBlank()) {
+                USERS.put(username, configuredHash.toLowerCase(Locale.ROOT));
+            }
         }
 
-        public static boolean authenticate(String username, String password) {
+        public static boolean isConfigured() {
+            return !USERS.isEmpty();
+        }
+
+        public static boolean authenticate(String username, char[] password) {
             String expectedHash = USERS.get(username);
             return expectedHash != null && expectedHash.equals(sha256(password));
         }
 
-        private static String sha256(String input) {
+        private static String sha256(char[] input) {
             try {
                 MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+                ByteBuffer byteBuffer = StandardCharsets.UTF_8.encode(CharBuffer.wrap(input));
+                byte[] bytes = new byte[byteBuffer.remaining()];
+                byteBuffer.get(bytes);
+                byte[] hash = digest.digest(bytes);
+                Arrays.fill(bytes, (byte) 0);
                 StringBuilder hex = new StringBuilder();
                 for (byte b : hash) {
                     hex.append(String.format("%02x", b));
@@ -470,6 +499,8 @@ public class UrusSewaApp {
                 return hex.toString();
             } catch (NoSuchAlgorithmException e) {
                 throw new IllegalStateException("SHA-256 unavailable", e);
+            } finally {
+                Arrays.fill(input, '\0');
             }
         }
     }

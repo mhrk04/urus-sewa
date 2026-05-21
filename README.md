@@ -9,7 +9,12 @@ java -cp src UrusSewaApp
 ```
 
 Default staff login:
-- Username: `staff`
-- Password: `UrusSewa@2026`
+- Username: value of `URUSSEWA_STAFF_USER` (defaults to `staff`)
+- Password hash: value of `URUSSEWA_STAFF_HASH` (SHA-256 hex)
 
-Optional: set `URUSSEWA_STAFF_HASH` (SHA-256 hex) to override the default login hash.
+Example setup:
+```bash
+export URUSSEWA_STAFF_USER=staff
+export URUSSEWA_STAFF_HASH=$(python -c "import hashlib; print(hashlib.sha256('YourStrongPassword'.encode()).hexdigest())")
+java -cp src UrusSewaApp
+```
