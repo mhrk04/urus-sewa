@@ -11,3 +11,5 @@ java -cp src UrusSewaApp
 Default staff login:
 - Username: `staff`
 - Password: `UrusSewa@2026`
+
+Optional: set `URUSSEWA_STAFF_HASH` (SHA-256 hex) to override the default login hash.

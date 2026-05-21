@@ -3,6 +3,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -446,7 +447,11 @@ public class UrusSewaApp {
                 "0d69d0d2dc8ae1b189139ced4b8466aa469c9070b78f16b74b17142f06995f2f";
 
         static {
-            USERS.put("staff", DEFAULT_STAFF_HASH);
+            String configuredHash = System.getenv("URUSSEWA_STAFF_HASH");
+            if (configuredHash == null || configuredHash.isBlank()) {
+                configuredHash = DEFAULT_STAFF_HASH;
+            }
+            USERS.put("staff", configuredHash.toLowerCase(Locale.ROOT));
         }
 
         public static boolean authenticate(String username, String password) {
@@ -457,7 +462,7 @@ public class UrusSewaApp {
         private static String sha256(String input) {
             try {
                 MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                byte[] hash = digest.digest(input.getBytes());
+                byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
                 StringBuilder hex = new StringBuilder();
                 for (byte b : hash) {
                     hex.append(String.format("%02x", b));
