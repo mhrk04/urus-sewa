@@ -1,0 +1,4 @@
+STANDARD,P001,Perodua,Myvi,120.0,true,36
+STANDARD,P0113,Proton,kokok,100.0,true,40,https://images.unsplash.com/photo-1563720223185-11003d516935?w=400
+
+
