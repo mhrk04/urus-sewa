@@ -23,3 +23,9 @@
 hs_err_pid*
 replay_pid*
 .vscode
+out/
+
+# App Data
+car_inventory.txt
+rental_history.txt
+invoices/
